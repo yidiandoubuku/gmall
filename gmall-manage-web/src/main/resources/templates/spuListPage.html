@@ -58,10 +58,19 @@
 
 </div>
 <div th:include="spuInfoPage"></div>
+<div th:include="skuInfoPage"></div>
 </body>
 <script type="text/javascript">
     function addSpuInfo(){
         initSpuInfoDlg();
     }
+    function addSkuInfo() {
+        var spuRow = $('#spulist_dg').datagrid('getSelected');
+        var ctg3val=$("#ctg3ForSpuList").combobox('getValue');
+        initSkuInfoDlg(spuRow.id,'',ctg3val);//在skuInfoPage.html中
+
+    }
+
+
 </script>
 </html>

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,8 +46,11 @@ public class attrManageController {
 
     @RequestMapping("attrInfoList")
     @ResponseBody
-    public List<BaseAttrInfo> getAttrInfoList(String catalog3Id){
-        return manageService.getAttrList(catalog3Id);
+    public List<BaseAttrInfo> getAttrInfoList(@RequestParam Map<String,String> map){
+        String catalog3Id =   map.get("catalog3Id") ;
+        List<BaseAttrInfo> attrList = manageService.getAttrList(catalog3Id);
+        return attrList;
+
     }
 
     @RequestMapping(value = "saveAttrInfo",method = RequestMethod.POST)
@@ -61,4 +66,21 @@ public class attrManageController {
         BaseAttrInfo attrInfo = manageService.getAttrInfo(attrId);
         return attrInfo.getAttrValueList();
     }
+    @RequestMapping("spuSaleAttrList")
+    @ResponseBody
+    public List<SpuSaleAttr> getSpuSaleAttrList(HttpServletRequest httpServletRequest){
+        String spuId = httpServletRequest.getParameter("spuId");
+        List<SpuSaleAttr> spuSaleAttrList = manageService.getSpuSaleAttrList(spuId);
+
+        for (SpuSaleAttr spuSaleAttr : spuSaleAttrList) {
+            List<SpuSaleAttrValue> spuSaleAttrValueList = spuSaleAttr.getSpuSaleAttrValueList();
+            Map map=new HashMap();
+            map.put("total",spuSaleAttrValueList.size());
+            map.put("rows",spuSaleAttrValueList);
+            // String spuSaleAttrValueJson = JSON.toJSONString(map);
+            spuSaleAttr.setSpuSaleAttrValueJson(map);
+        }
+        return spuSaleAttrList;
+    }
+
 }

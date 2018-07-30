@@ -44,20 +44,32 @@
             <div style="margin-bottom:5px">
                 <a href="#" id="spuSaleAttrAddBtn" class="easyui-linkbutton" iconCls="icon-add" onclick="addSpuSaleAttr()" plain="true">添加销售属性</a>
                 <a href="#" id="spuSaleAttrEditBtn" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="editSpuSaleAttr()">编辑销售属性</a>
-                <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" >删除</a>
+                <a href="#" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="removeSpuSaleAttrValue()" >删除</a>
             </div>
         </div>
 
-        <!--<div th:include="spuSaleAttrPage"></div>-->
-
+        <div th:include="spuSaleAttrPage"></div>
     </form>
 </div>
 <!----------------弹出框的按钮组----------------------->
 <div id="spuBtns">
     <a href="#" class="easyui-linkbutton" onclick="saveSpu()">保 存</a>
-    <a href="#" class="easyui-linkbutton" onclick="closeSpu()">关 闭</a>
+    <a href="#" class="easyui-linkbutton" onclick="javascript:$('#spu_dlg').dialog('close')">关 闭</a>
 </div>
 <script type="text/javascript">
+    function addSpuSaleAttr(){
+
+        initSpuSaleAttrDlg();
+    }
+
+    function removeSpuSaleAttrValue() {
+        var datagrid=$('#spuSaleAttrValueDg');
+        var row = datagrid.datagrid('getSelected');
+        if (row) {
+            var rowIndex = datagrid.datagrid('getRowIndex', row);
+            datagrid.datagrid('deleteRow', rowIndex);
+        }
+    }
     // 初始化
     function addSpuInfo() {
         // 调用初始化initSpuInfoDlg()方法
@@ -139,7 +151,9 @@
             },
             view: detailview,
             detailFormatter: function (rowIndex, rowData) {
-                return "<img src=" + rowData.imgUrl + " style='width:100px;height:100px;'>";
+                    if(rowData.imgUrl!=null) {
+                        return "<img src=" + rowData.imgUrl + " style='width:100px;height:100px;'>";
+                    }
             }
         });
 
@@ -228,6 +242,51 @@
         });
 
 
+    }
+    function editSpuSaleAttr(){
+        var spuId= $("#spuId").val();
+        var spuSaleAttr = $('#spuSaleAttrDg').datagrid('getSelected');
+        initSpuSaleAttrDlg(spuId,spuSaleAttr);
+    }
+    function saveSpu() {
+        var spuInfo = {};
+        //保存单独的字段
+        spuInfo["id"] = $("#spuId").val();
+        spuInfo["spuName"] = $("#spuName").val();
+        spuInfo["description"] = $("#description").val();
+        spuInfo["catalog3Id"] = $("#ctg3ForSpuList").combobox('getValue');
+
+        //保存图片表格字段
+        var spuImgDgRows = $("#spuImgDg").datagrid('getRows');
+        for (var i = 0; i < spuImgDgRows.length; i++) {
+            spuInfo["spuImageList[" + i + "].imgName"] = spuImgDgRows[i].imgName;  //要跟bean中字段对齐
+            spuInfo["spuImageList[" + i + "].imgUrl"] = spuImgDgRows[i].imgUrl;
+        }
+
+        //保存销售属性中的字段
+        var spuSaleAttrDgRows = $("#spuSaleAttrDg").datagrid('getRows');
+        for (var i = 0; i < spuSaleAttrDgRows.length; i++) {
+            spuInfo["spuSaleAttrList[" + i + "].id"] = spuSaleAttrDgRows[i].id;  //要跟bean中字段对齐
+            spuInfo["spuSaleAttrList[" + i + "].saleAttrId"] = spuSaleAttrDgRows[i].saleAttrId;  //要跟bean中字段对齐
+            spuInfo["spuSaleAttrList[" + i + "].saleAttrName"] = spuSaleAttrDgRows[i].saleAttrName;
+            //保存销售属性值的字段
+            var saleAttrValueRows = spuSaleAttrDgRows[i].spuSaleAttrValueJson.rows;
+            for (var j = 0; j < saleAttrValueRows.length; j++) {
+
+                spuInfo["spuSaleAttrList[" + i + "].spuSaleAttrValueList[" + j + "].id"] = saleAttrValueRows[j].id;
+                spuInfo["spuSaleAttrList[" + i + "].spuSaleAttrValueList[" + j + "].saleAttrValueName"] = saleAttrValueRows[j].saleAttrValueName;
+                spuInfo["spuSaleAttrList[" + i + "].spuSaleAttrValueList[" + j + "].saleAttrId"] = spuSaleAttrDgRows[i].saleAttrId;
+            }
+
+        }
+
+        console.log(JSON.stringify(spuInfo));
+
+        //ajax 保存到后台
+        $.post("saveSpuInfo", spuInfo, function (data) {
+            $("#spu_dlg").dialog("close");
+            $("#spulist_dg").datagrid("reload");
+        });
     }
 
 
